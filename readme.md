@@ -1,7 +1,3 @@
-<img src="icon_pro4.jpg" width="120">
-
-# **Facturador PRO 4**
-
 
 ## Manuales de Instalación
 
