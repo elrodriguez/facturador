@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Controllers\Tenant;
 
 use App\Exports\DigemidItemExport;
@@ -104,15 +105,16 @@ class ItemController extends Controller
      *
      * @return \Illuminate\Database\Eloquent\Builder
      */
-    public function getRecords(Request $request){
+    public function getRecords(Request $request)
+    {
 
         $records = Item::whereTypeUser()->whereNotIsSet();
         switch ($request->column) {
 
             case 'brand':
-                $records->whereHas('brand',function($q) use($request){
-                                    $q->where('name', 'like', "%{$request->value}%");
-                                });
+                $records->whereHas('brand', function ($q) use ($request) {
+                    $q->where('name', 'like', "%{$request->value}%");
+                });
                 break;
 
             case 'active':
@@ -124,28 +126,27 @@ class ItemController extends Controller
                 break;
 
             default:
-                if($request->has('column'))
-                $records->where($request->column, 'like', "%{$request->value}%");
+                if ($request->has('column'))
+                    $records->where($request->column, 'like', "%{$request->value}%");
                 break;
         }
         if ($request->type) {
-            if($request->type ==='PRODUCTS') {
+            if ($request->type === 'PRODUCTS') {
                 // listar solo productos en la lista de productos
                 $records->whereNotService();
-            }else{
+            } else {
                 $records->whereService();
             }
         }
         $isPharmacy = false;
-        if($request->has('isPharmacy') ){
-            $isPharmacy = ($request->isPharmacy==='true')?true:false;
+        if ($request->has('isPharmacy')) {
+            $isPharmacy = ($request->isPharmacy === 'true') ? true : false;
         }
-        if($isPharmacy == true){
+        if ($isPharmacy == true) {
             $records->Pharmacy()
                 ->with(['cat_digemid']);
         }
         return $records->orderBy('description');
-
     }
 
     public function create()
@@ -165,27 +166,27 @@ class ItemController extends Controller
         $tags = Tag::all();
         $categories = Category::all();
         $brands = Brand::all();
-        $configuration= Configuration::first();
+        $configuration = Configuration::first();
         /** Informacion adicional */
         $colors = collect([]);
-        $CatItemStatus=$colors;
+        $CatItemStatus = $colors;
         $CatItemUnitBusiness = $colors;
         $CatItemMoldCavity = $colors;
-        $CatItemPackageMeasurement =$colors;
+        $CatItemPackageMeasurement = $colors;
         $CatItemUnitsPerPackage = $colors;
         $CatItemMoldProperty = $colors;
-        $CatItemProductFamily= $colors;
-        $CatItemSize= $colors;
-        if($configuration->isShowExtraInfoToItem()){
+        $CatItemProductFamily = $colors;
+        $CatItemSize = $colors;
+        if ($configuration->isShowExtraInfoToItem()) {
             $colors = CatColorsItem::all();
-            $CatItemStatus= CatItemStatus::all();
-            $CatItemSize= CatItemSize::all();
+            $CatItemStatus = CatItemStatus::all();
+            $CatItemSize = CatItemSize::all();
             $CatItemUnitBusiness = CatItemUnitBusiness::all();
             $CatItemMoldCavity = CatItemMoldCavity::all();
             $CatItemPackageMeasurement = CatItemPackageMeasurement::all();
             $CatItemUnitsPerPackage = CatItemUnitsPerPackage::all();
             $CatItemMoldProperty = CatItemMoldProperty::all();
-            $CatItemProductFamily= CatItemProductFamily::all();
+            $CatItemProductFamily = CatItemProductFamily::all();
         }
         /** Informacion adicional */
         $configuration = $configuration->getCollectionData();
@@ -227,7 +228,8 @@ class ItemController extends Controller
         return $record;
     }
 
-    public function store(ItemRequest $request) {
+    public function store(ItemRequest $request)
+    {
 
         $id = $request->input('id');
         if (!$request->barcode) {
@@ -249,51 +251,48 @@ class ItemController extends Controller
             }
         }
         $current_lot = null;
-        if(!empty($item->id)){
+        if (!empty($item->id)) {
             $current_lot = ItemLotsGroup::where([
                 'code' => $item->lot_code,
-                'item_id'=>$item->id
+                'item_id' => $item->id
             ])->first();
         }
 
         $item->fill($request->all());
 
         $temp_path = $request->input('temp_path');
-        if($temp_path) {
+        if ($temp_path) {
 
-            $directory = 'public'.DIRECTORY_SEPARATOR.'uploads'.DIRECTORY_SEPARATOR.'items'.DIRECTORY_SEPARATOR;
+            $directory = 'public' . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . 'items' . DIRECTORY_SEPARATOR;
 
             $file_name_old = $request->input('image');
             $file_name_old_array = explode('.', $file_name_old);
             $file_content = file_get_contents($temp_path);
             $datenow = date('YmdHis');
-            $file_name = Str::slug($item->description).'-'.$datenow.'.'.$file_name_old_array[1];
-            Storage::put($directory.$file_name, $file_content);
+            $file_name = Str::slug($item->description) . '-' . $datenow . '.' . $file_name_old_array[1];
+            Storage::put($directory . $file_name, $file_content);
             $item->image = $file_name;
 
             //--- IMAGE SIZE MEDIUM
             $image = \Image::make($temp_path);
-            $file_name = Str::slug($item->description).'-'.$datenow.'_medium'.'.'.$file_name_old_array[1];
+            $file_name = Str::slug($item->description) . '-' . $datenow . '_medium' . '.' . $file_name_old_array[1];
             $image->resize(512, null, function ($constraint) {
                 $constraint->aspectRatio();
                 $constraint->upsize();
             });
-            Storage::put($directory.$file_name,  (string) $image->encode('jpg', 30));
+            Storage::put($directory . $file_name,  (string) $image->encode('jpg', 30));
             $item->image_medium = $file_name;
 
-              //--- IMAGE SIZE SMALL
+            //--- IMAGE SIZE SMALL
             $image = \Image::make($temp_path);
-            $file_name = Str::slug($item->description).'-'.$datenow.'_small'.'.'.$file_name_old_array[1];
+            $file_name = Str::slug($item->description) . '-' . $datenow . '_small' . '.' . $file_name_old_array[1];
             $image->resize(256, null, function ($constraint) {
                 $constraint->aspectRatio();
                 $constraint->upsize();
             });
-            Storage::put($directory.$file_name,  (string) $image->encode('jpg', 20));
+            Storage::put($directory . $file_name,  (string) $image->encode('jpg', 20));
             $item->image_small = $file_name;
-
-
-
-        }else if(!$request->input('image') && !$request->input('temp_path') && !$request->input('image_url')){
+        } else if (!$request->input('image') && !$request->input('temp_path') && !$request->input('image_url')) {
             $item->image = 'imagen-no-disponible.jpg';
         }
 
@@ -311,36 +310,35 @@ class ItemController extends Controller
             $item_unit_type->price3 = $value['price3'];
             $item_unit_type->price_default = $value['price_default'];
             $item_unit_type->save();
-
         }
         $configuration = Configuration::first();
-        if($configuration->isShowExtraInfoToItem()){
+        if ($configuration->isShowExtraInfoToItem()) {
             // Extra data
-            if($request->has('colors')){
+            if ($request->has('colors')) {
                 $item->setItemColor($request->colors);
             }
-            if($request->has('CatItemUnitsPerPackage')){
+            if ($request->has('CatItemUnitsPerPackage')) {
                 $item->setItemUnitsPerPackage($request->CatItemUnitsPerPackage);
             }
-            if($request->has('CatItemMoldCavity')){
+            if ($request->has('CatItemMoldCavity')) {
                 $item->setItemMoldCavity($request->CatItemMoldCavity);
             }
-            if($request->has('CatItemMoldProperty')){
+            if ($request->has('CatItemMoldProperty')) {
                 $item->setItemMoldProperty($request->CatItemMoldProperty);
             }
-            if($request->has('CatItemUnitBusiness')){
+            if ($request->has('CatItemUnitBusiness')) {
                 $item->setItemUnitBusiness($request->CatItemUnitBusiness);
             }
-            if($request->has('CatItemStatus')){
+            if ($request->has('CatItemStatus')) {
                 $item->setItemStatus($request->CatItemStatus);
             }
-            if($request->has('CatItemPackageMeasurement')){
+            if ($request->has('CatItemPackageMeasurement')) {
                 $item->setItemPackageMeasurement($request->CatItemPackageMeasurement);
             }
-            if($request->has('CatItemProductFamily')){
+            if ($request->has('CatItemProductFamily')) {
                 $item->setItemProductFamily($request->CatItemProductFamily);
             }
-            if($request->has('CatItemSize')){
+            if ($request->has('CatItemSize')) {
                 $item->setItemSize($request->CatItemSize);
             }
             // Extra data
@@ -349,7 +347,7 @@ class ItemController extends Controller
 
 
         if ($request->tags_id) {
-            ItemTag::destroy(   ItemTag::where('item_id', $item->id)->pluck('id'));
+            ItemTag::destroy(ItemTag::where('item_id', $item->id)->pluck('id'));
             foreach ($request->tags_id as $value) {
                 ItemTag::create(['item_id' => $item->id,  'tag_id' => $value]);
                 //$tag = ItemTag::where('item_id', $item->id)->where('tag_id', $value)->first();
@@ -360,11 +358,11 @@ class ItemController extends Controller
 
             // $item->lots()->delete();
             $establishment = Establishment::where('id', auth()->user()->establishment_id)->first();
-            $warehouse = Warehouse::where('establishment_id',$establishment->id)->first();
+            $warehouse = Warehouse::where('establishment_id', $establishment->id)->first();
 
             //$warehouse = WarehouseModule::find(auth()->user()->establishment_id);
 
-            $v_lots = isset($request->lots) ? $request->lots:[];
+            $v_lots = isset($request->lots) ? $request->lots : [];
 
             foreach ($v_lots as $lot) {
 
@@ -373,12 +371,12 @@ class ItemController extends Controller
                     'date' => $lot['date'],
                     'series' => $lot['series'],
                     'item_id' => $item->id,
-                    'warehouse_id' => $warehouse ? $warehouse->id:null,
+                    'warehouse_id' => $warehouse ? $warehouse->id : null,
                     'has_sale' => false,
                     'state' => $lot['state'],
                 ]);
             }
-            $lots_enabled = isset($request->lots_enabled) ? $request->lots_enabled:false;
+            $lots_enabled = isset($request->lots_enabled) ? $request->lots_enabled : false;
             if ($lots_enabled) {
                 ItemLotsGroup::create([
                     'code'  => $request->lot_code,
@@ -418,22 +416,22 @@ class ItemController extends Controller
             */
             /****************************** SECCION PARA SEIRES EN ITEMLOT **********************************************/
             $establishment = Establishment::where('id', auth()->user()->establishment_id)->first();
-            $warehouse = Warehouse::where('establishment_id',$establishment->id)->first();
-            $v_lots = isset($request->lots) ? $request->lots:[];
+            $warehouse = Warehouse::where('establishment_id', $establishment->id)->first();
+            $v_lots = isset($request->lots) ? $request->lots : [];
             foreach ($v_lots as $lot) {
                 /**
                  * @var  ItemLot $temp_serie
                  * @var Int $lot_id
                  * @var Bool $delete
                  */
-                $lot_id = isset($lot['id'])? (int) $lot['id']:0;
-                $delete = isset($lot['deleted'])?(boolean)$lot['deleted']:false;
-                if($lot_id != 0){
+                $lot_id = isset($lot['id']) ? (int) $lot['id'] : 0;
+                $delete = isset($lot['deleted']) ? (bool)$lot['deleted'] : false;
+                if ($lot_id != 0) {
                     $temp_serie = ItemLot::find($lot_id);
-                    if(!empty($temp_serie)){
-                        if($delete == true){
+                    if (!empty($temp_serie)) {
+                        if ($delete == true) {
                             $temp_serie->delete();
-                        }else{
+                        } else {
                             $temp_serie
                                 ->setDate($lot['date'])
                                 ->setSeries($lot['series'])
@@ -441,12 +439,12 @@ class ItemController extends Controller
                                 ->push();
                         }
                     }
-                }else{
+                } else {
                     $temp_serie = new ItemLot([
                         'date' => $lot['date'],
                         'series' => $lot['series'],
                         'item_id' => $item->id,
-                        'warehouse_id' => $warehouse ? $warehouse->id:null,
+                        'warehouse_id' => $warehouse ? $warehouse->id : null,
                         'has_sale' => false,
                         'state' => $lot['state'],
                     ]);
@@ -454,26 +452,26 @@ class ItemController extends Controller
                 }
             }
 
-            $lots_enabled = isset($request->lots_enabled) ? $request->lots_enabled:false;
+            $lots_enabled = isset($request->lots_enabled) ? $request->lots_enabled : false;
             /****************************** SECCION PARA LOTE EN ITEM LOT_CODE ******************************************/
             if ($lots_enabled and !empty($request->lot_code)) {
-                if(empty($current_lot)){
+                if (empty($current_lot)) {
                     $current_lot = new ItemLotsGroup([
                         'code' => $item->lot_code,
-                        'item_id'=>$item->id,
+                        'item_id' => $item->id,
                         'quantity' => $request->stock,
-                         'date_of_due'=>$request->date_of_due,
+                        'date_of_due' => $request->date_of_due,
                     ]);
                     $current_lot->push();
-                }else{
+                } else {
                     $lotes = ItemLotsGroup::where([
-                        'code'=>$current_lot->code,
+                        'code' => $current_lot->code,
                         // 'quantity',
                         // 'date_of_due',
-                        'item_id'=>$item->id
+                        'item_id' => $item->id
                     ])->get();
                     /** @var ItemLotsGroup $lot */
-                    foreach($lotes as $lot){
+                    foreach ($lotes as $lot) {
                         $lot
                             ->setCode($request->lot_code)
                             ->setDateOfDue($request->date_of_due)
@@ -492,17 +490,17 @@ class ItemController extends Controller
             }
         }
 
-        $directory = 'public'.DIRECTORY_SEPARATOR.'uploads'.DIRECTORY_SEPARATOR.'items'.DIRECTORY_SEPARATOR;
+        $directory = 'public' . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . 'items' . DIRECTORY_SEPARATOR;
 
-        $multi_images = isset($request->multi_images) ? $request->multi_images:[];
+        $multi_images = isset($request->multi_images) ? $request->multi_images : [];
 
         foreach ($multi_images as $im) {
 
             $file_name = $im['filename'];
             $file_content = file_get_contents($im['temp_path']);
-            Storage::put($directory.$file_name, $file_content);
+            Storage::put($directory . $file_name, $file_content);
 
-            ItemImage::create(['item_id'=> $item->id, 'image' => $file_name]);
+            ItemImage::create(['item_id' => $item->id, 'image' => $file_name]);
         }
 
         if (!$item->barcode) {
@@ -518,25 +516,25 @@ class ItemController extends Controller
         $this->createItemWarehousePrices($request, $item);
 
         // if ($warehouses) {
-            // /** @var ItemWarehousePrice $price */
+        // /** @var ItemWarehousePrice $price */
 
-            // foreach ($warehouses as $warehouse) {
-            //     $price = ItemWarehousePrice::where([
-            //         'item_id' => $item->id,
-            //         'warehouse_id' => $warehouse['id'],
-            //     ])->first();
-            //     if(empty($price)){
-            //         $price = new ItemWarehousePrice([
-            //             'item_id' => $item->id,
-            //             'warehouse_id' => $warehouse['id'],
-            //         ]) ;
-            //     }
-            //     $price
-            //         ->setPrice($warehouse['price'])
-            //         ->push();
-            // }
+        // foreach ($warehouses as $warehouse) {
+        //     $price = ItemWarehousePrice::where([
+        //         'item_id' => $item->id,
+        //         'warehouse_id' => $warehouse['id'],
+        //     ])->first();
+        //     if(empty($price)){
+        //         $price = new ItemWarehousePrice([
+        //             'item_id' => $item->id,
+        //             'warehouse_id' => $warehouse['id'],
+        //         ]) ;
+        //     }
+        //     $price
+        //         ->setPrice($warehouse['price'])
+        //         ->push();
+        // }
 
-            /*
+        /*
             ItemWarehousePrice::where('item_id', $item->id)
                 ->delete();
 
@@ -559,7 +557,7 @@ class ItemController extends Controller
 
         return [
             'success' => true,
-            'message' => ($id)?'Producto editado con éxito':'Producto registrado con éxito',
+            'message' => ($id) ? 'Producto editado con éxito' : 'Producto registrado con éxito',
             'id' => $item->id
         ];
     }
@@ -603,14 +601,10 @@ class ItemController extends Controller
                 'success' => true,
                 'message' => 'Producto eliminado con éxito'
             ];
-
         } catch (Exception $e) {
 
-            return ($e->getCode() == '23000') ? ['success' => false,'message' => 'El producto esta siendo usado por otros registros, no puede eliminar'] : ['success' => false,'message' => 'Error inesperado, no se pudo eliminar el producto'];
-
+            return ($e->getCode() == '23000') ? ['success' => false, 'message' => 'El producto esta siendo usado por otros registros, no puede eliminar'] : ['success' => false, 'message' => 'Error inesperado, no se pudo eliminar el producto'];
         }
-
-
     }
 
     public function destroyItemUnitType($id)
@@ -687,7 +681,7 @@ class ItemController extends Controller
 
         $validate_upload = UploadFileHelper::validateUploadFile($request, 'file', 'jpg,jpeg,png,gif,svg');
 
-        if(!$validate_upload['success']){
+        if (!$validate_upload['success']) {
             return $validate_upload;
         }
 
@@ -726,12 +720,12 @@ class ItemController extends Controller
         ];
     }
 
-    private function deleteRecordInitialKardex($item){
+    private function deleteRecordInitialKardex($item)
+    {
 
-        if($item->kardex->count() == 1){
+        if ($item->kardex->count() == 1) {
             ($item->kardex[0]->type == null) ? $item->kardex[0]->delete() : false;
         }
-
     }
 
 
@@ -739,23 +733,22 @@ class ItemController extends Controller
     {
         $item = Item::find($request->id);
 
-        if(!$item->internal_id && $request->apply_store){
+        if (!$item->internal_id && $request->apply_store) {
             return [
                 'success' => false,
-                'message' =>'Para habilitar la visibilidad, debe asignar un codigo interno al producto',
+                'message' => 'Para habilitar la visibilidad, debe asignar un codigo interno al producto',
             ];
         }
 
-        $visible = $request->apply_store == true ? 1 : 0 ;
+        $visible = $request->apply_store == true ? 1 : 0;
         $item->apply_store = $visible;
         $item->save();
 
         return [
             'success' => true,
-            'message' => ($visible > 0 )?'El Producto ya es visible en tienda virtual' : 'El Producto ya no es visible en tienda virtual',
+            'message' => ($visible > 0) ? 'El Producto ya es visible en tienda virtual' : 'El Producto ya no es visible en tienda virtual',
             'id' => $request->id
         ];
-
     }
 
     public function duplicate(Request $request)
@@ -763,13 +756,13 @@ class ItemController extends Controller
         // return $request->id;
         $obj = Item::find($request->id);
 
-        if($obj->lots_enabled){
+        if ($obj->lots_enabled) {
             $obj->date_of_due = null;
             $obj->lot_code = null;
             $obj->stock = 0;
         }
 
-        $new = $obj->setDescription($obj->getDescription().' (Duplicado)')->replicate();
+        $new = $obj->setDescription($obj->getDescription() . ' (Duplicado)')->replicate();
         $new->save();
 
         return [
@@ -778,7 +771,6 @@ class ItemController extends Controller
                 'id' => $new->id,
             ],
         ];
-
     }
 
     public function disable($id)
@@ -793,24 +785,22 @@ class ItemController extends Controller
                 'success' => true,
                 'message' => 'Producto inhabilitado con éxito'
             ];
-
         } catch (Exception $e) {
 
             return  ['success' => false, 'message' => 'Error inesperado, no se pudo inhabilitar el producto'];
-
         }
     }
 
     public function images($item)
     {
-        $records = ItemImage::where('item_id', $item)->get()->transform(function($row){
+        $records = ItemImage::where('item_id', $item)->get()->transform(function ($row) {
             return [
                 'id' => $row->id,
                 'item_id' => $row->item_id,
                 'image' => $row->image,
                 'id' => $row->id,
                 'name' => $row->image,
-                'url'=> asset('storage'.DIRECTORY_SEPARATOR.'uploads'.DIRECTORY_SEPARATOR.'items'.DIRECTORY_SEPARATOR.$row->image)
+                'url' => asset('storage' . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . 'items' . DIRECTORY_SEPARATOR . $row->image)
             ];
         });
         return [
@@ -843,11 +833,9 @@ class ItemController extends Controller
                 'success' => true,
                 'message' => 'Producto habilitado con éxito'
             ];
-
         } catch (Exception $e) {
 
             return  ['success' => false, 'message' => 'Error inesperado, no se pudo habilitar el producto'];
-
         }
     }
 
@@ -864,12 +852,12 @@ class ItemController extends Controller
 
         switch ($period) {
             case 'month':
-                $d_start = Carbon::parse($request->month_start.'-01')->format('Y-m-d');
-                $d_end = Carbon::parse($request->month_start.'-01')->endOfMonth()->format('Y-m-d');
+                $d_start = Carbon::parse($request->month_start . '-01')->format('Y-m-d');
+                $d_end = Carbon::parse($request->month_start . '-01')->endOfMonth()->format('Y-m-d');
                 break;
             case 'between_months':
-                $d_start = Carbon::parse($request->month_start.'-01')->format('Y-m-d');
-                $d_end = Carbon::parse($request->month_end.'-01')->endOfMonth()->format('Y-m-d');
+                $d_start = Carbon::parse($request->month_start . '-01')->format('Y-m-d');
+                $d_end = Carbon::parse($request->month_end . '-01')->endOfMonth()->format('Y-m-d');
                 break;
         }
 
@@ -880,16 +868,16 @@ class ItemController extends Controller
         $items = Item::whereTypeUser()->whereNotIsSet();
         $extradata = [];
         $isPharmacy = false;
-        if($request->has('isPharmacy') ){
-            $isPharmacy = ($request->isPharmacy==='true')?true:false;
+        if ($request->has('isPharmacy')) {
+            $isPharmacy = ($request->isPharmacy === 'true') ? true : false;
         }
-        if($isPharmacy == true){
-            $extradata[]='sanitary';
-            $extradata[]='cod_digemid';
+        if ($isPharmacy == true) {
+            $extradata[] = 'sanitary';
+            $extradata[] = 'cod_digemid';
             $items->Pharmacy();
         }
 
-        if($period !== 'all'){
+        if ($period !== 'all') {
             $items->whereBetween('created_at', [$d_start, $d_end]);
         }
 
@@ -897,8 +885,7 @@ class ItemController extends Controller
         return (new ItemExport())
             ->setExtraData($extradata)
             ->records($records)
-            ->download('Reporte_Items_'.Carbon::now().'.xlsx');
-
+            ->download('Reporte_Items_' . Carbon::now() . '.xlsx');
     }
 
     /**
@@ -906,8 +893,9 @@ class ItemController extends Controller
      *
      * @return \Illuminate\Http\Response|\Symfony\Component\HttpFoundation\BinaryFileResponse
      */
-    public function exportWp(Request $request) {
-        $date = $request->month_start.'-01';
+    public function exportWp(Request $request)
+    {
+        $date = $request->month_start . '-01';
         $start_date = Carbon::parse($date);
         $end_date = Carbon::parse($date)->addMonth()->subDay();
 
@@ -923,11 +911,11 @@ class ItemController extends Controller
         return (new ItemExportWp())
             ->setExtraData($extradata)
             ->records($records)
-            ->download('Reporte_Items_'.Carbon::now().'.csv', Excel::CSV);
-
+            ->download('Reporte_Items_' . Carbon::now() . '.csv', Excel::CSV);
     }
 
-    public function exportBarCode(Request $request){
+    public function exportBarCode(Request $request)
+    {
 
         ini_set("pcre.backtrack_limit", "50000000");
 
@@ -937,12 +925,12 @@ class ItemController extends Controller
         $records = Item::whereBetween('id', [$start, $end]);
         $extradata = [];
         $isPharmacy = false;
-        if($request->has('isPharmacy') ){
-            $isPharmacy = ($request->isPharmacy==='true')?true:false;
+        if ($request->has('isPharmacy')) {
+            $isPharmacy = ($request->isPharmacy === 'true') ? true : false;
         }
-        if($isPharmacy == true){
-            $extradata[]='sanitary';
-            $extradata[]='cod_digemid';
+        if ($isPharmacy == true) {
+            $extradata[] = 'sanitary';
+            $extradata[] = 'cod_digemid';
             $records->Pharmacy();
         }
         $extra_data = $extradata;
@@ -958,11 +946,11 @@ class ItemController extends Controller
             'margin_bottom' => 0,
             'margin_left' => 2
         ]);
-        $html = view('tenant.items.exports.items-barcode', compact('records','extra_data'))->render();
+        $html = view('tenant.items.exports.items-barcode', compact('records', 'extra_data'))->render();
 
         $pdf->WriteHTML($html, HTMLParserMode::HTML_BODY);
 
-        $pdf->output('etiquetas_'.now()->format('Y_m_d').'.pdf', 'I');
+        $pdf->output('etiquetas_' . now()->format('Y_m_d') . '.pdf', 'I');
     }
 
     /**
@@ -983,21 +971,21 @@ class ItemController extends Controller
         $end = $request[1];
 
         $records = Item::whereBetween('id', [$start, $end])
-            ->where(function($q){
-                $q->orwhere('barcode','!=','');
-                $q->orwhere('internal_id','!=','');
+            ->where(function ($q) {
+                $q->orwhere('barcode', '!=', '');
+                $q->orwhere('internal_id', '!=', '');
             })
             // ->wherenotnull('barcode')
         ;
         $extradata = [];
         $establishment = \Auth::user()->establishment;
         $isPharmacy = false;
-        if($request->has('isPharmacy') ){
-            $isPharmacy = ($request->isPharmacy==='true')?true:false;
+        if ($request->has('isPharmacy')) {
+            $isPharmacy = ($request->isPharmacy === 'true') ? true : false;
         }
-        if($isPharmacy == true){
-            $extradata[]='sanitary';
-            $extradata[]='cod_digemid';
+        if ($isPharmacy == true) {
+            $extradata[] = 'sanitary';
+            $extradata[] = 'cod_digemid';
             $records->Pharmacy();
         }
         $extra_data = $extradata;
@@ -1007,7 +995,7 @@ class ItemController extends Controller
         $width = 48;
         $pdfj = new Fpdi();
         /** @var Item $item */
-        foreach($records as $item){
+        foreach ($records as $item) {
             $pdf = new Mpdf([
                 'mode' => 'utf-8',
                 'format' => [
@@ -1019,14 +1007,13 @@ class ItemController extends Controller
                 'margin_bottom' => 0,
                 'margin_left' => 2
             ]);
-            $html = view('tenant.items.exports.items-barcode-full', compact('item','extra_data','establishment'))->render();
+            $html = view('tenant.items.exports.items-barcode-full', compact('item', 'extra_data', 'establishment'))->render();
             $pdf->AddPage();
             $pdf->WriteHTML($html, HTMLParserMode::HTML_BODY);
             PdfUnionController::addFpi($pdfj, $pdf);
         }
 
-        return PdfUnionController::ResponseAsFile($pdfj,'bar_code_full');
-
+        return PdfUnionController::ResponseAsFile($pdfj, 'bar_code_full');
     }
     /**
      * Exporta items al formato de DIGEMID
@@ -1039,14 +1026,15 @@ class ItemController extends Controller
     {
         ini_set('max_execution_time', 0);
         $company = Company::first();
-        $company_cod_digemid = $company->cod_digemid;
-        $records = CatDigemid::where('active',1);
-        $max_prices = $records->max('max_prices');
-            $records = $records->get();
+        $company_cod_digemid = $company->cod_digemid ? $company->cod_digemid : 0;
+        $records = CatDigemid::where('active', 1);
+        $max_prices = $records->max('max_prices') ? $records->max('max_prices') : 0;
+        $records = $records->get();
         $export = new DigemidItemExport();
+        //dd($company_cod_digemid);
         $export->setRecords($records)->setCompanyCodDigemid($company_cod_digemid)->setMaxPrice($max_prices);
 
-        return $export->download('Reporte_Items_Digemid_'.Carbon::now().'.xlsx');
+        return $export->download('Reporte_Items_Digemid_' . Carbon::now() . '.xlsx');
     }
 
     public function printBarCode(Request $request)
@@ -1058,14 +1046,14 @@ class ItemController extends Controller
         $item_warehouse = ItemWarehouse::where([['item_id', $id], ['warehouse_id', auth()->user()
             ->establishment->warehouse->id]])->first();
 
-        if(!$item_warehouse){
+        if (!$item_warehouse) {
             return [
                 'success' => false,
                 'message' => "El producto seleccionado no esta disponible en su almacen!"
             ];
         }
 
-        if($item_warehouse->stock < 1){
+        if ($item_warehouse->stock < 1) {
             return [
                 'success' => false,
                 'message' => "El producto seleccionado no tiene stock disponible en su almacen, no puede generar etiquetas!"
@@ -1075,22 +1063,21 @@ class ItemController extends Controller
         $stock = $item_warehouse->stock;
 
         $pdf = new Mpdf([
-                'mode' => 'utf-8',
-                'format' => [
-                    104.1,
-                    24
-                    ],
-                'margin_top' => 2,
-                'margin_right' => 2,
-                'margin_bottom' => 0,
-                'margin_left' => 2
-            ]);
+            'mode' => 'utf-8',
+            'format' => [
+                104.1,
+                24
+            ],
+            'margin_top' => 2,
+            'margin_right' => 2,
+            'margin_bottom' => 0,
+            'margin_left' => 2
+        ]);
         $html = view('tenant.items.exports.items-barcode-id', compact('record', 'stock'))->render();
 
         $pdf->WriteHTML($html, HTMLParserMode::HTML_BODY);
 
-        $pdf->output('etiquetas_'.now()->format('Y_m_d').'.pdf', 'I');
-
+        $pdf->output('etiquetas_' . now()->format('Y_m_d') . '.pdf', 'I');
     }
 
     public function itemLast()
@@ -1119,9 +1106,9 @@ class ItemController extends Controller
      *
      * @return \App\Http\Resources\Tenant\ItemCollection
      */
-    public function getAllItems(Request $r){
+    public function getAllItems(Request $r)
+    {
         $records = $this->getRecords($r);
         return new ItemCollection($records->paginate(5000));
-
     }
 }

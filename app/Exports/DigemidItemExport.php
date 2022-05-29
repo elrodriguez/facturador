@@ -19,9 +19,9 @@ class DigemidItemExport implements FromView, ShouldAutoSize
     /**
      * @return \Illuminate\Database\Eloquent\Collection
      */
-    public function getRecords()
-    : \Illuminate\Database\Eloquent\Collection {
-        if(empty($this->records)){
+    public function getRecords(): \Illuminate\Database\Eloquent\Collection
+    {
+        if (empty($this->records)) {
             $this->records = new \Illuminate\Database\Eloquent\Collection();
         }
         return $this->records;
@@ -30,8 +30,8 @@ class DigemidItemExport implements FromView, ShouldAutoSize
     /**
      * @return int
      */
-    public function getMaxPrice()
-    : int {
+    public function getMaxPrice(): int
+    {
         return (int) $this->max_price;
     }
 
@@ -40,8 +40,8 @@ class DigemidItemExport implements FromView, ShouldAutoSize
      *
      * @return DigemidItemExport
      */
-    public function setMaxPrice(int $max_price)
-    : DigemidItemExport {
+    public function setMaxPrice(int $max_price): DigemidItemExport
+    {
         $this->max_price = $max_price;
         return $this;
     }
@@ -51,8 +51,8 @@ class DigemidItemExport implements FromView, ShouldAutoSize
      *
      * @return DigemidItemExport
      */
-    public function setRecords(\Illuminate\Database\Eloquent\Collection $records)
-    : DigemidItemExport {
+    public function setRecords(\Illuminate\Database\Eloquent\Collection $records): DigemidItemExport
+    {
         $this->records = $records;
         return $this;
     }
@@ -60,9 +60,9 @@ class DigemidItemExport implements FromView, ShouldAutoSize
     /**
      * @return string
      */
-    public function getCompanyCodDigemid()
-    : string {
-        if(empty( $this->company_cod_digemid)){
+    public function getCompanyCodDigemid(): string
+    {
+        if (empty($this->company_cod_digemid)) {
             $this->company_cod_digemid = '';
         }
         return $this->company_cod_digemid;
@@ -73,8 +73,8 @@ class DigemidItemExport implements FromView, ShouldAutoSize
      *
      * @return DigemidItemExport
      */
-    public function setCompanyCodDigemid(string $company_cod_digemid)
-    : DigemidItemExport {
+    public function setCompanyCodDigemid(string $company_cod_digemid): DigemidItemExport
+    {
         $this->company_cod_digemid = $company_cod_digemid;
         return $this;
     }
@@ -82,13 +82,12 @@ class DigemidItemExport implements FromView, ShouldAutoSize
 
 
 
-    public function view(): View {
+    public function view(): View
+    {
         return view('tenant.items.exports.items-digemid', [
-            'records'=> $this->getRecords(),
-            'company_cod_digemid'=> $this->getCompanyCodDigemid(),
-            'max_price'=> $this->getMaxPrice(),
+            'records' => $this->getRecords(),
+            'company_cod_digemid' => $this->getCompanyCodDigemid(),
+            'max_price' => $this->getMaxPrice(),
         ]);
     }
-
-
 }
