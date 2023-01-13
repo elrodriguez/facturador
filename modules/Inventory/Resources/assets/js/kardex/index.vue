@@ -21,10 +21,9 @@
                             <th v-if="item_id">Saldo</th>
                             <!--
                             <th >Almacen </th>
-                            <th >Precio de almacen</th>
-                        -->
+                            <th >Precio de almacen</th>-->
 
-                        <tr>
+                        </tr>
                         <tr slot-scope="{ index, row }">
                             <td>{{ index }}</td>
                             <td v-if="!item_id">{{row.item_name}}</td>

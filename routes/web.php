@@ -182,6 +182,7 @@ if ($hostname) {
             Route::get('items/export/barcode', 'Tenant\ItemController@exportBarCode')->name('tenant.items.export.barcode');
             Route::get('items/export/barcode_full', 'Tenant\ItemController@exportBarCodeFull');
             Route::get('items/export/barcode/print', 'Tenant\ItemController@printBarCode')->name('tenant.items.export.barcode.print');
+            Route::get('items/export/qrcode/print', 'Tenant\ItemController@printLabels')->name('tenant.items.export.qrcode.print');
             Route::get('items/export/barcode/last', 'Tenant\ItemController@itemLast')->name('tenant.items.last');
             Route::post('get-items', 'Tenant\ItemController@getAllItems');
 
@@ -638,7 +639,6 @@ if ($hostname) {
             Route::get('purchase-settlements', 'Tenant\PurchaseSettlementController@index')->name('tenant.purchase-settlements.index');
             Route::get('purchase-settlements/columns', 'Tenant\PurchaseSettlementController@columns');
             Route::get('purchase-settlements/records', 'Tenant\PurchaseSettlementController@records');
-
         });
     });
 } else {
@@ -769,9 +769,6 @@ if ($hostname) {
                 }
             });
             */
-
-
-
         });
     });
 }

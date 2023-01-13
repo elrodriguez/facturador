@@ -161,8 +161,10 @@
                     <div class="col-md-4 col-sm-4">
                         <div :class="{'has-danger': errors.unit_price_value}" class="form-group">
                             <label class="control-label">Precio Unitario</label>
-                            <el-input v-model="form.unit_price_value" :readonly="!edit_unit_price"
-                                      @input="calculateQuantity">
+                            <el-input 
+                                v-model="form.unit_price_value" 
+                                :readonly="!edit_unit_price"
+                                @input="calculateQuantity">
                                 <template v-if="form.item.currency_type_symbol" slot="prepend">
                                     {{ form.item.currency_type_symbol }}
                                 </template>

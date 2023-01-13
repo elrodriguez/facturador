@@ -1111,4 +1111,47 @@ class ItemController extends Controller
         $records = $this->getRecords($r);
         return new ItemCollection($records->paginate(5000));
     }
+
+    public function printLabels(Request $request)
+    {
+
+        ini_set("pcre.backtrack_limit", "50000000");
+        $id = $request->id;
+
+        $record = Item::find($id);
+        $item_warehouse = ItemWarehouse::where([['item_id', $id], ['warehouse_id', auth()->user()
+            ->establishment->warehouse->id]])->first();
+
+        if (!$item_warehouse) {
+            return [
+                'success' => false,
+                'message' => "El producto seleccionado no esta disponible en su almacen!"
+            ];
+        }
+
+        if ($item_warehouse->stock < 1) {
+            return [
+                'success' => false,
+                'message' => "El producto seleccionado no tiene stock disponible en su almacen, no puede generar etiquetas!"
+            ];
+        }
+
+        $stock = $item_warehouse->stock;
+
+        $pdf = new Mpdf([
+            'mode' => 'utf-8',
+            'format' => [
+                72, 25
+            ],
+            'margin_top' => 2,
+            'margin_right' => 2,
+            'margin_bottom' => 0,
+            'margin_left' => 2
+        ]);
+        $html = view('tenant.items.exports.items-qrcode', compact('record', 'stock'))->render();
+        //echo $html;
+        $pdf->WriteHTML($html, HTMLParserMode::HTML_BODY);
+
+        $pdf->output('etiquetas_' . now()->format('Y_m_d') . '.pdf', 'I');
+    }
 }

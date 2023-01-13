@@ -151,7 +151,6 @@ return [
          * Package Service Providers...
          */
         Collective\Html\HtmlServiceProvider::class,
-
         /*
          * Application Service Providers...
          */
@@ -187,6 +186,7 @@ return [
 
         ZanySoft\Zip\ZipServiceProvider::class,
         Barryvdh\Debugbar\ServiceProvider::class,
+        SimpleSoftwareIO\QrCode\QrCodeServiceProvider::class,
     ],
 
     /*
@@ -241,6 +241,7 @@ return [
         'Image' => Intervention\Image\Facades\Image::class,
         'Zip' => ZanySoft\Zip\ZipFacade::class,
         'Markdown' => GrahamCampbell\Markdown\Facades\Markdown::class,
+        'QrCode' => SimpleSoftwareIO\QrCode\Facades\QrCode::class
     ],
 
 ];

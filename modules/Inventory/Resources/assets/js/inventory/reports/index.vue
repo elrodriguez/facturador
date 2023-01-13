@@ -14,7 +14,9 @@
                             <el-dropdown-menu slot="dropdown">
                                 <el-dropdown-item v-for="(column, index) in filters"
                                                   :key="index">
-                                    <el-checkbox v-model="column.visible">{{ column.title }}</el-checkbox>
+                                    <el-checkbox v-model="column.visible">
+                                        {{ column.title }}
+                                    </el-checkbox>
                                 </el-dropdown-item>
                             </el-dropdown-menu>
                         </el-dropdown>
@@ -155,9 +157,10 @@
                                     <thead class="">
                                     <tr>
                                         <th>#</th>
+                                        <th>Código</th>
                                         <th>Descripción</th>
                                         <th v-if="filters.model.visible">Modelo</th>
-                                        <th>Categoria</th>
+                                        <th v-if="filters.categories.visible">Categoria</th>
                                         <th class="text-right">Stock mínimo</th>
                                         <th class="text-right">Stock actual</th>
                                         <th class="text-right">Precio de venta</th>
@@ -188,33 +191,39 @@
                                     </tr>
                                     </thead>
                                     <tbody>
-                                    <tr v-for="(row, index) in records"
-                                        :key="index">
-                                        <td>{{ index + 1 }}</td>
-                                        <td>{{ row.name }}</td>
-                                        <td v-if="filters.model.visible">{{ row.model }}</td>
-                                        <td>{{ row.item_category_name }}</td>
-                                        <td class="text-right">{{ row.stock_min }}</td>
-                                        <td class="text-right">{{ row.stock }}</td>
-                                        <td class="text-right">{{ row.sale_unit_price }}</td>
-                                        <td class="text-right">{{ row.purchase_unit_price }}</td>
-                                        <td class="text-right">{{ row.profit }}</td>
-                                        <td class="text-right">{{ Math.abs(row.profit * row.stock).toFixed(2) }}</td>
-                                        <td>{{ row.brand_name }}</td>
-                                        <td class="text-center">{{ row.date_of_due }}</td>
-                                        <td>{{ row.warehouse_name }}</td>
-                                    </tr>
+                                        <tr v-for="(row, index) in records"
+                                            :key="index">
+                                            <td>{{ index + 1 }}</td>
+                                            <td>{{ row.internal_id }}</td>
+                                            <td>{{ row.name }}</td>
+                                            <td v-if="filters.model.visible">{{ row.model }}</td>
+                                            <td v-if="filters.categories.visible">{{ row.item_category_name }}</td>
+                                            <td class="text-right">{{ row.stock_min }}</td>
+                                            <td class="text-right">{{ row.stock }}</td>
+                                            <td class="text-right">{{ row.sale_unit_price }}</td>
+                                            <td class="text-right">{{ row.purchase_unit_price }}</td>
+                                            <td class="text-right">{{ row.profit }}</td>
+                                            <td class="text-right">{{ Math.abs(row.profit * row.stock).toFixed(2) }}</td>
+                                            <td>{{ row.brand_name }}</td>
+                                            <td class="text-center">{{ row.date_of_due }}</td>
+                                            <td>{{ row.warehouse_name }}</td>
+                                        </tr>
                                     </tbody>
                                     <tfoot>
-                                    <tr>
-                                        <td class="celda"
-                                            colspan="5"></td>
-                                        <td class="celda">S/ {{ totals.sale_unit_price }}</td>
-                                        <td class="celda">S/ {{ totals.purchase_unit_price }}</td>
-
-                                        <td class="celda">S/ {{ total_profit }}</td>
-                                        <td class="celda">S/ {{ total_all_profit }}</td>
-                                    </tr>
+                                        <tr>
+                                            <td class="celda" colspan="5">Totales precio unitario</td>
+                                            <td class="celda">S/ {{ totals.sale_unit_price }}</td>
+                                            <td class="celda">S/ {{ totals.purchase_unit_price }}</td>
+                                            <td class="celda">S/ {{ total_profit }}</td>
+                                            <td class="celda">S/ {{ total_all_profit }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="celda" colspan="5">Totales precio por Cantidad</td>
+                                            <td class="celda">S/ {{ totals.spricexquantity }}</td>
+                                            <td class="celda">S/ {{ totals.ppricexquantity }}</td>
+                                            <td class="celda"></td>
+                                            <td class="celda">S/ {{ total_all_profit }}</td>
+                                        </tr>
                                     </tfoot>
                                 </table>
                             </div>
@@ -262,6 +271,8 @@ export default {
             filters: [],
             records: [],
             totals: {
+                ppricexquantity:0,
+                spricexquantity:0,
                 purchase_unit_price: 0,
                 sale_unit_price: 0,
             },
@@ -309,6 +320,8 @@ export default {
         initTotals() {
 
             this.totals = {
+                ppricexquantity:0,
+                spricexquantity:0,
                 purchase_unit_price: 0,
                 sale_unit_price: 0,
             }
@@ -340,6 +353,8 @@ export default {
 
                     el.totals.purchase_unit_price += parseFloat(a.purchase_unit_price)
                     el.totals.sale_unit_price += parseFloat(a.sale_unit_price)
+                    el.totals.ppricexquantity += (parseFloat(a.stock)*parseFloat(a.purchase_unit_price))
+                    el.totals.spricexquantity += (parseFloat(a.stock)*parseFloat(a.sale_unit_price))
 
                 })
 
@@ -350,6 +365,8 @@ export default {
 
             this.totals.purchase_unit_price = this.totals.purchase_unit_price.toFixed(6)
             this.totals.sale_unit_price = this.totals.sale_unit_price.toFixed(6)
+            this.totals.ppricexquantity = this.totals.ppricexquantity.toFixed(6)
+            this.totals.spricexquantity = this.totals.spricexquantity.toFixed(6)
 
         },
         initTables() {

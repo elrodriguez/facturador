@@ -33,7 +33,8 @@
         "setasign/fpdi": "^2.0",
         "symfony/process": "^4.4",
         "thiagoalessio/tesseract_ocr": "^2.7",
-        "zanysoft/laravel-zip": "^1.0"
+        "zanysoft/laravel-zip": "^1.0",
+        "simplesoftwareio/simple-qrcode": "~2"
     },
     "require-dev": {
         "barryvdh/laravel-debugbar": "~3.2.3",
@@ -64,6 +65,7 @@
     "extra": {
         "laravel": {
             "dont-discover": [
+                "laravel/dusk"
             ]
         }
     },

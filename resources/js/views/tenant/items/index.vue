@@ -569,8 +569,8 @@ export default {
                     "Para generar el código de barras debe registrar el código de barras."
                 );
             }
-
-            window.open(`/${this.resource}/export/barcode/print?id=${row.id}`);
+            //window.open(`/${this.resource}/export/barcode/print?id=${row.id}`);
+            window.open(`/${this.resource}/export/qrcode/print?id=${row.id}`);
         },
     },
 };
